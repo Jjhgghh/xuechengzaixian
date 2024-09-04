@@ -16,7 +16,8 @@ public enum CommonError {
    PARAMS_ERROR("非法参数"),
    OBJECT_NULL("对象为空"),
    QUERY_NULL("查询结果为空"),
-   REQUEST_NULL("请求参数为空");
+   REQUEST_NULL("请求参数为空"),
+   DELETE_ERROR("课程计划信息还有子级信息，无法操作");
 
    private String errMessage;
 
