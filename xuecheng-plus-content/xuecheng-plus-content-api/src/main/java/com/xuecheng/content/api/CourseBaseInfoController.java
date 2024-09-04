@@ -8,6 +8,7 @@ import com.xuecheng.content.model.dto.CourseBaseInfoDto;
 import com.xuecheng.content.model.dto.EditCourseDto;
 import com.xuecheng.content.model.dto.QueryCourseParamsDto;
 import com.xuecheng.content.model.po.CourseBase;
+import com.xuecheng.content.model.result.Result;
 import com.xuecheng.content.service.impl.CourseBaseInfoServiceImpl;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -55,6 +56,14 @@ public class CourseBaseInfoController {
         Long companyId = 1232141425L;
 
         return courseBaseInfoService.updateCourseBase(companyId,editCourseDto);
+    }
+
+    @ApiOperation("删除课程信息")
+    @DeleteMapping("/course/{courseId}")
+    public Result deleteCourseBase(@PathVariable Long courseId) {
+        Long companyId = 1232141425L;
+        courseBaseInfoService.deleteCourseBase(companyId,courseId);
+       return Result.success(null);
     }
 
 }

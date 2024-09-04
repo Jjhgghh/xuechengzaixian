@@ -5,25 +5,23 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuecheng.base.exception.XueChengPlusException;
 import com.xuecheng.base.model.PageParams;
 import com.xuecheng.base.model.PageResult;
-import com.xuecheng.content.mapper.CourseBaseMapper;
-import com.xuecheng.content.mapper.CourseCategoryMapper;
-import com.xuecheng.content.mapper.CourseMarketMapper;
+import com.xuecheng.content.mapper.*;
 import com.xuecheng.content.model.dto.AddCourseDto;
 import com.xuecheng.content.model.dto.CourseBaseInfoDto;
 import com.xuecheng.content.model.dto.EditCourseDto;
 import com.xuecheng.content.model.dto.QueryCourseParamsDto;
-import com.xuecheng.content.model.po.CourseBase;
-import com.xuecheng.content.model.po.CourseCategory;
-import com.xuecheng.content.model.po.CourseMarket;
+import com.xuecheng.content.model.po.*;
 import com.xuecheng.content.service.CourseBaseInfoService;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
@@ -34,6 +32,12 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
     CourseMarketMapper courseMarketMapper;
     @Autowired
     CourseCategoryMapper courseCategoryMapper;
+    @Autowired
+    TeachplanMapper teachplanMapper;
+    @Autowired
+    TeachplanMediaMapper teachplanMediaMapper;
+    @Autowired
+    CourseTeacherMapper courseTeacherMapper;
 
 
     @Override
@@ -152,6 +156,44 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
         CourseBaseInfoDto baseInfoDto = getCourseBaseInfo(id);
 
         return baseInfoDto;
+    }
+
+    @Override
+    @Transactional
+    public void deleteCourseBase(Long companyId,Long courseId) {
+
+        CourseBase courseBase = courseBaseMapper.selectById(courseId);
+        if (!companyId.equals(courseBase.getCompanyId())){
+            XueChengPlusException.cast("只能删除本机构课程");
+        }
+
+        if(!courseBase.getAuditStatus().equals("202002")){
+            XueChengPlusException.cast("课程的审核状态为未提交时方可删除。");
+        }
+        courseBaseMapper.deleteById(courseId);
+        courseMarketMapper.deleteById(courseId);
+        LambdaQueryWrapper<Teachplan> eq = new LambdaQueryWrapper<Teachplan>().eq(Teachplan::getCourseId, courseId);
+        List<Teachplan> teachplans = teachplanMapper.selectList(eq);
+        if (!CollectionUtils.isEmpty(teachplans)){
+            List<Long> collect = teachplans.stream().map(teachplan -> teachplan.getId()).collect(Collectors.toList());
+            teachplanMapper.deleteBatchIds(collect);
+        }
+
+        LambdaQueryWrapper<TeachplanMedia> eq1 = new LambdaQueryWrapper<TeachplanMedia>().eq(TeachplanMedia::getCourseId, courseId);
+        List<TeachplanMedia> teachplanMedias = teachplanMediaMapper.selectList(eq1);
+        if (!CollectionUtils.isEmpty(teachplanMedias)){
+            List<Long> collect1 = teachplanMedias.stream().map(teachplanMedia -> teachplanMedia.getId()).collect(Collectors.toList());
+            teachplanMediaMapper.deleteBatchIds(collect1);
+        }
+
+        LambdaQueryWrapper<CourseTeacher> eq2 = new LambdaQueryWrapper<CourseTeacher>().eq(CourseTeacher::getCourseId, courseId);
+        List<CourseTeacher> teachers = courseTeacherMapper.selectList(eq2);
+        if (!CollectionUtils.isEmpty(teachers)){
+            List<Long> collect2 = teachers.stream().map(CourseTeacher::getId).collect(Collectors.toList());
+            courseTeacherMapper.deleteBatchIds(collect2);
+        }
+
+
     }
 
 

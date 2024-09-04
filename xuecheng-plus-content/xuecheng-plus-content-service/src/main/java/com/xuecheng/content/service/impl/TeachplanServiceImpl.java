@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -42,11 +43,13 @@ public class TeachplanServiceImpl implements TeachplanService {
             Long courseId = saveTeachplanDto.getCourseId();
             Integer sorted = getTeachplanCount(parentid, courseId);
             teachplan.setOrderby(sorted);
+            teachplan.setCreateDate(LocalDateTime.now());
             teachplanMapper.insert(teachplan);
 
         }else {
             Teachplan teachplan = teachplanMapper.selectById(id);
             BeanUtils.copyProperties(saveTeachplanDto,teachplan);
+            teachplan.setChangeDate(LocalDateTime.now());
             teachplanMapper.updateById(teachplan);
 
         }

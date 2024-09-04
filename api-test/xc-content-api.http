@@ -60,3 +60,35 @@ GET {{content_host}}/content/teachplan/117/tree-nodes
 
 ### 删除课程计划
 DELETE {{content_host}}/content/teachplan/284
+
+### /courseTeacher/list/{courseId} 查询教师
+GET {{content_host}}/content/courseTeacher/list/72
+### 添加教师
+POST {{content_host}}/content/courseTeacher
+Content-Type: application/json
+
+{
+  "courseId": 75,
+  "teacherName": "w老师",
+  "position": "教师职位",
+  "introduction": "教师简介"
+}
+
+### 修改教师
+PUT {{content_host}}/content/courseTeacher
+Content-Type: application/json
+
+{
+  "id": 24,
+  "courseId": 75,
+  "teacherName": "白老师",
+  "position": "教师职位",
+  "introduction": "教师简介",
+  "photograph": null,
+  "createDate": null
+}
+
+###删除课程
+DELETE {{content_host}}/content/course/87
+
+
