@@ -2,19 +2,45 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>xuecheng-plus-content-service</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>xuecheng-plus-content-service</name>
-    <description>xuecheng-plus-content-service</description>
     <parent>
+        <artifactId>xuecheng-plus-media</artifactId>
         <groupId>com.xuecheng</groupId>
-        <artifactId>xuecheng-plus-content</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
+    <artifactId>xuecheng-plus-media-service</artifactId>
+    <name>xuecheng-plus-media-service</name>
+    <description>xuecheng-plus-media-service</description>
+
     <dependencies>
         <dependency>
+            <groupId>com.xuxueli</groupId>
+            <artifactId>xxl-job-core</artifactId>
+        </dependency>
+        <!--minio服务-->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>8.3.3</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>okhttp</artifactId>
+                    <groupId>com.squareup.okhttp3</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.8.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.xuecheng</groupId>
-            <artifactId>xuecheng-plus-content-model</artifactId>
+            <artifactId>xuecheng-plus-media-model</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
@@ -29,10 +55,6 @@
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-context</artifactId>
         </dependency>
         <!-- Spring Boot 集成 Junit -->
         <dependency>
@@ -58,10 +80,7 @@
             <artifactId>spring-boot-starter-log4j2</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.alibaba.cloud</groupId>
-            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
-        </dependency>
+
     </dependencies>
 
 </project>

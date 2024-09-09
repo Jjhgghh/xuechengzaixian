@@ -6,7 +6,7 @@ spring:
   profiles:
     active: dev
   application:
-    name: content-service
+    name: system-service
   cloud:
     nacos:
       server-addr: 192.168.101.65:8848

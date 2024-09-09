@@ -56,7 +56,7 @@ Content-Type: application/json
   "price": 0.01
 }
 ###根据课程ID查询课程计划
-GET {{content_host}}/content/teachplan/117/tree-nodes
+GET {{gateway_host}}/content/teachplan/117/tree-nodes
 
 ### 删除课程计划
 DELETE {{content_host}}/content/teachplan/284
