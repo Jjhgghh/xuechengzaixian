@@ -9,10 +9,12 @@ import com.xuecheng.base.model.PageParams;
 import com.xuecheng.base.model.PageResult;
 import com.xuecheng.base.model.RestResponse;
 import com.xuecheng.media.mapper.MediaFilesMapper;
+import com.xuecheng.media.mapper.MediaProcessMapper;
 import com.xuecheng.media.model.dto.QueryMediaParamsDto;
 import com.xuecheng.media.model.dto.UploadFileParamsDto;
 import com.xuecheng.media.model.dto.UploadFileResultDto;
 import com.xuecheng.media.model.po.MediaFiles;
+import com.xuecheng.media.model.po.MediaProcess;
 import com.xuecheng.media.service.MediaFileService;
 import io.minio.*;
 import io.minio.errors.*;
@@ -59,6 +61,8 @@ public class MediaFileServiceImpl implements MediaFileService {
  private MinioClient minioClient;
   @Autowired
   MediaFileService currentProxy;
+  @Autowired
+ MediaProcessMapper mediaProcessMapper;
   @Value("${minio.bucket.files}")
   private String bucket_Files;
  @Value("${minio.bucket.videofiles}")
@@ -142,7 +146,24 @@ public class MediaFileServiceImpl implements MediaFileService {
    }
    log.debug("保存文件信息到数据库成功:{}",mediaFiles.toString());
   }
+ addWaitingTask(mediaFiles);
+ log.debug("保存文件信息到数据库成功,{}", mediaFiles.toString());
   return mediaFiles;
+ }
+
+ private void addWaitingTask(MediaFiles mediaFiles) {
+  String filename = mediaFiles.getFilename();
+  String mimeType = getMimeType(filename.substring(filename.lastIndexOf(".")));
+  if (mimeType.equals("video/x-msvideo")){
+   MediaProcess mediaProcess = new MediaProcess();
+   BeanUtils.copyProperties(mediaFiles,mediaProcess);
+   mediaProcess.setCreateDate(LocalDateTime.now());
+   mediaProcess.setStatus("1");
+   mediaProcess.setUrl(null);
+   mediaProcessMapper.insert(mediaProcess);
+  }
+
+
  }
 
  @Override
