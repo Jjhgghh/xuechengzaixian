@@ -41,16 +41,16 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
 
 
     @Override
-    public PageResult<CourseBase> list(PageParams pageParams, QueryCourseParamsDto queryCourseParamsDto) {
+    public PageResult<CourseBase> list(Long companyId, PageParams pageParams, QueryCourseParamsDto queryCourseParamsDto) {
 
 
         Page<CourseBase> page = new Page<>(pageParams.getPageNo(), pageParams.getPageSize());
         LambdaQueryWrapper<CourseBase> wrapper = new LambdaQueryWrapper<>();
 
-        wrapper.like(StringUtils.isNotEmpty(queryCourseParamsDto.getCourseName()),CourseBase::getName,queryCourseParamsDto.getCourseName());
-        wrapper.eq(StringUtils.isNotEmpty(queryCourseParamsDto.getAuditStatus()),CourseBase::getAuditStatus,queryCourseParamsDto.getAuditStatus());
-        wrapper.eq(StringUtils.isNotEmpty(queryCourseParamsDto.getPublishStatus()),CourseBase::getStatus,queryCourseParamsDto.getPublishStatus());
-
+        wrapper.like(StringUtils.isNotEmpty(queryCourseParamsDto.getCourseName()), CourseBase::getName, queryCourseParamsDto.getCourseName());
+        wrapper.eq(StringUtils.isNotEmpty(queryCourseParamsDto.getAuditStatus()), CourseBase::getAuditStatus, queryCourseParamsDto.getAuditStatus());
+        wrapper.eq(StringUtils.isNotEmpty(queryCourseParamsDto.getPublishStatus()), CourseBase::getStatus, queryCourseParamsDto.getPublishStatus());
+        wrapper.eq(CourseBase::getCompanyId, companyId);
 
         Page<CourseBase> pageresult = courseBaseMapper.selectPage(page, wrapper);
         List<CourseBase> items = pageresult.getRecords();
@@ -98,14 +98,14 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
         courseBase.setStatus("203001");
         courseBase.setCreateDate(LocalDateTime.now());
         int insert = courseBaseMapper.insert(courseBase);
-        if (insert<=0){
+        if (insert <= 0) {
             throw new RuntimeException("新增课程基本信息失败");
         }
         CourseMarket newCourseMarket = new CourseMarket();
         BeanUtils.copyProperties(dto, newCourseMarket);
         newCourseMarket.setId(courseBase.getId());
         int i = saveCourseMarket(newCourseMarket);
-        if (i<=0){
+        if (i <= 0) {
             throw new RuntimeException("保存课程营销信息失败");
         }
         CourseBaseInfoDto baseInfoDto = getCourseBaseInfo(courseBase.getId());
@@ -113,7 +113,8 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
 
 
     }
-    public  CourseBaseInfoDto getCourseBaseInfo(Long courseBaseId) {
+
+    public CourseBaseInfoDto getCourseBaseInfo(Long courseBaseId) {
         if (courseBaseMapper.selectById(courseBaseId) == null) {
             return null;
         }
@@ -122,8 +123,8 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
         CourseBase courseBase1 = courseBaseMapper.selectById(courseBaseId);
         BeanUtils.copyProperties(courseBase1, courseBaseInfoDto);
         CourseMarket courseMarket = courseMarketMapper.selectById(courseBaseId);
-        if(courseMarket != null){
-            BeanUtils.copyProperties(courseMarket,courseBaseInfoDto);
+        if (courseMarket != null) {
+            BeanUtils.copyProperties(courseMarket, courseBaseInfoDto);
         }
         CourseCategory courseCategory = courseCategoryMapper.selectById(courseBaseInfoDto.getMt());
         courseBaseInfoDto.setMtName(courseCategory.getName());
@@ -137,17 +138,17 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
     public CourseBaseInfoDto updateCourseBase(Long companyId, EditCourseDto editCourseDto) {
         Long id = editCourseDto.getId();
         CourseBase courseBase = courseBaseMapper.selectById(id);
-        if (courseBase==null){
+        if (courseBase == null) {
             XueChengPlusException.cast("课程不存在");
         }
-        if (!companyId.equals(courseBase.getCompanyId())){
+        if (!companyId.equals(courseBase.getCompanyId())) {
             XueChengPlusException.cast("只能修改本机构课程");
         }
 
         BeanUtils.copyProperties(editCourseDto, courseBase);
         courseBase.setChangeDate(LocalDateTime.now());
         int i = courseBaseMapper.updateById(courseBase);
-        if (i<=0){
+        if (i <= 0) {
             XueChengPlusException.cast("修改课程基本信息失败");
         }
         CourseMarket courseMarket = new CourseMarket();
@@ -160,35 +161,35 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
 
     @Override
     @Transactional
-    public void deleteCourseBase(Long companyId,Long courseId) {
+    public void deleteCourseBase(Long companyId, Long courseId) {
 
         CourseBase courseBase = courseBaseMapper.selectById(courseId);
-        if (!companyId.equals(courseBase.getCompanyId())){
+        if (!companyId.equals(courseBase.getCompanyId())) {
             XueChengPlusException.cast("只能删除本机构课程");
         }
 
-        if(!courseBase.getAuditStatus().equals("202002")){
+        if (!courseBase.getAuditStatus().equals("202002")) {
             XueChengPlusException.cast("课程的审核状态为未提交时方可删除。");
         }
         courseBaseMapper.deleteById(courseId);
         courseMarketMapper.deleteById(courseId);
         LambdaQueryWrapper<Teachplan> eq = new LambdaQueryWrapper<Teachplan>().eq(Teachplan::getCourseId, courseId);
         List<Teachplan> teachplans = teachplanMapper.selectList(eq);
-        if (!CollectionUtils.isEmpty(teachplans)){
+        if (!CollectionUtils.isEmpty(teachplans)) {
             List<Long> collect = teachplans.stream().map(teachplan -> teachplan.getId()).collect(Collectors.toList());
             teachplanMapper.deleteBatchIds(collect);
         }
 
         LambdaQueryWrapper<TeachplanMedia> eq1 = new LambdaQueryWrapper<TeachplanMedia>().eq(TeachplanMedia::getCourseId, courseId);
         List<TeachplanMedia> teachplanMedias = teachplanMediaMapper.selectList(eq1);
-        if (!CollectionUtils.isEmpty(teachplanMedias)){
+        if (!CollectionUtils.isEmpty(teachplanMedias)) {
             List<Long> collect1 = teachplanMedias.stream().map(teachplanMedia -> teachplanMedia.getId()).collect(Collectors.toList());
             teachplanMediaMapper.deleteBatchIds(collect1);
         }
 
         LambdaQueryWrapper<CourseTeacher> eq2 = new LambdaQueryWrapper<CourseTeacher>().eq(CourseTeacher::getCourseId, courseId);
         List<CourseTeacher> teachers = courseTeacherMapper.selectList(eq2);
-        if (!CollectionUtils.isEmpty(teachers)){
+        if (!CollectionUtils.isEmpty(teachers)) {
             List<Long> collect2 = teachers.stream().map(CourseTeacher::getId).collect(Collectors.toList());
             courseTeacherMapper.deleteBatchIds(collect2);
         }
@@ -198,19 +199,19 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
 
 
     private int saveCourseMarket(CourseMarket newCourseMarket) {
-        if (StringUtils.isBlank(newCourseMarket.getCharge())){
+        if (StringUtils.isBlank(newCourseMarket.getCharge())) {
             throw new RuntimeException("收费规则没有选择");
         }
-        if (newCourseMarket.getCharge().equals("201001")){
-            if (newCourseMarket.getPrice()==null||newCourseMarket.getPrice().floatValue()<=0){
+        if (newCourseMarket.getCharge().equals("201001")) {
+            if (newCourseMarket.getPrice() == null || newCourseMarket.getPrice().floatValue() <= 0) {
                 XueChengPlusException.cast("课程为收费价格不能为空且必须大于0");
             }
         }
         CourseMarket courseMarket = courseMarketMapper.selectById(newCourseMarket.getId());
-        if (courseMarket==null){
+        if (courseMarket == null) {
             int insert = courseMarketMapper.insert(newCourseMarket);
             return insert;
-        }else {
+        } else {
             BeanUtils.copyProperties(newCourseMarket, courseMarket);
             courseMarket.setId(newCourseMarket.getId());
             int i = courseMarketMapper.updateById(courseMarket);

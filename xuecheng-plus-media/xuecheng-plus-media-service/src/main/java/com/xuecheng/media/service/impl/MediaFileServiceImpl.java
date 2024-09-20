@@ -122,7 +122,14 @@ public class MediaFileServiceImpl implements MediaFileService {
 
 
  }
-@Transactional(rollbackFor = Exception.class)
+
+ @Override
+ public MediaFiles getFile(String mediaId) {
+  MediaFiles mediaFiles = mediaFilesMapper.selectById(mediaId);
+  return mediaFiles;
+ }
+
+ @Transactional(rollbackFor = Exception.class)
  public MediaFiles addMediaFilesToDb(String fileMd5,UploadFileParamsDto uploadFileParamsDto,String  objectName,
  Long companyId,String bucket){
   MediaFiles mediaFiles = mediaFilesMapper.selectById(fileMd5);
@@ -351,7 +358,7 @@ public class MediaFileServiceImpl implements MediaFileService {
 
 
  @Override
- public UploadFileResultDto uploadFile(Long companyId, UploadFileParamsDto uploadFileParamsDto, String localFilePath) {
+ public UploadFileResultDto uploadFile(Long companyId, UploadFileParamsDto uploadFileParamsDto, String localFilePath,String objectName) {
   File file = new File(localFilePath);
   String bucket=bucket_Files;
   String filename = uploadFileParamsDto.getFilename();
@@ -359,7 +366,10 @@ public class MediaFileServiceImpl implements MediaFileService {
   String mimeType = getMimeType(extension);
   String defaultFolderPath = getDefaultFolderPath();
   String fileMd5 = getFileMd5(new File(localFilePath));
-  String  objectName=defaultFolderPath+fileMd5+extension;
+  if (StringUtils.isEmpty(objectName)){
+   objectName=defaultFolderPath+fileMd5+extension;
+  }
+
   boolean b = addMediaFilesToMinIO(localFilePath, objectName, mimeType, bucket);
   uploadFileParamsDto.setFileSize(file.length());
   MediaFiles mediaFiles = currentProxy.addMediaFilesToDb(fileMd5, uploadFileParamsDto, objectName, companyId, bucket);

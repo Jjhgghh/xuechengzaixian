@@ -33,6 +33,10 @@ public class GlobalExceptionHandler {
     public RestErrorResponse exception(Exception e) {
         String errMessage = e.getMessage();
         log.error("系统异常{}",errMessage,e);
+        if (errMessage.equals("不允许访问")){
+            return new RestErrorResponse("没有操作此功能的权限");
+        }
+
         return new RestErrorResponse(CommonError.UNKOWN_ERROR.getErrMessage());
     }
     //MethodArgumentNotValidException
