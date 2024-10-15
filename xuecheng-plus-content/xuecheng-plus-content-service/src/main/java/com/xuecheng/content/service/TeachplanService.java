@@ -19,4 +19,6 @@ public interface TeachplanService {
     public void movedown(Long teachplanId);
 
     public void associationMedia(BindTeachplanMediaDto bindTeachplanMediaDto);
+
+    String getIsPreview(Long teachplanId);
 }

@@ -61,5 +61,11 @@ public class TeachplanController {
         teachplanService.associationMedia(bindTeachplanMediaDto);
     }
 
+    @ApiOperation("查询课程计划是否支持试学")
+    @GetMapping("/teachplan/{teachplanId}")
+    public String getIsPreview(@PathVariable Long teachplanId){
+        return teachplanService.getIsPreview(teachplanId);
+    }
+
 
 }

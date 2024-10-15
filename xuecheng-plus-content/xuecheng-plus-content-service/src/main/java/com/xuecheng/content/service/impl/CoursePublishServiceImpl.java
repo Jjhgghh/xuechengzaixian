@@ -26,8 +26,11 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
@@ -41,6 +44,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -61,6 +65,10 @@ public class CoursePublishServiceImpl implements CoursePublishService {
     MqMessageService mqMessageService;
     @Autowired
     MediaServiceClient mediaServiceClient;
+    @Autowired
+    RedisTemplate redisTemplate;
+    @Autowired
+    RedissonClient redissonClient;
 
 
     @Override
@@ -184,5 +192,48 @@ public class CoursePublishServiceImpl implements CoursePublishService {
     public CoursePublish getCoursePublish(Long courseId){
         CoursePublish coursePublish = coursePublishMapper.selectById(courseId);
         return coursePublish ;
+    }
+
+    @Override
+    public CoursePublish getCoursePublishCache(Long courseId) {
+        Object oJson = redisTemplate.opsForValue().get("course:" + courseId);
+
+        if (oJson!=null){
+            String jsonString = oJson.toString();
+            if ("null".equals(jsonString)){
+                return null;
+            }
+            CoursePublish coursePublish = JSON.parseObject(jsonString, CoursePublish.class);
+            return coursePublish ;
+        }else{
+            RLock lock = redissonClient.getLock("coursequerylock:" + courseId);
+            lock.lock();
+
+            try {
+
+                oJson = redisTemplate.opsForValue().get("course:" + courseId);
+
+                if (oJson!=null){
+                    String jsonString = oJson.toString();
+                    if ("null".equals(jsonString)){
+                        return null;
+                    }
+                    CoursePublish coursePublish = JSON.parseObject(jsonString, CoursePublish.class);
+                    return coursePublish ;
+                }
+                System.out.println("===查询数据库==");
+                CoursePublish coursePublish = getCoursePublish(courseId);
+
+                redisTemplate.opsForValue().set("course:" + courseId, JSON.toJSONString(coursePublish),30, TimeUnit.SECONDS);
+
+                return coursePublish ;
+            } finally {
+                lock.unlock();
+            }
+
+
+        }
+
+
     }
 }

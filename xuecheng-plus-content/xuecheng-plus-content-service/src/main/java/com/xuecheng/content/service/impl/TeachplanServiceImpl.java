@@ -182,6 +182,12 @@ public class TeachplanServiceImpl implements TeachplanService {
         teachplanMediaMapper.insert(teachplanMedia);
     }
 
+    @Override
+    public String getIsPreview(Long teachplanId) {
+        Teachplan teachplan = teachplanMapper.selectById(teachplanId);
+        return teachplan.getIsPreview();
+    }
+
     public Integer getTeachplanCount(Long parentid,Long courseId){
         LambdaQueryWrapper<Teachplan> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper = queryWrapper.eq(Teachplan::getParentid, parentid).eq(Teachplan::getCourseId, courseId);
